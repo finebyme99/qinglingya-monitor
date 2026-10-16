@@ -5,7 +5,7 @@ const ACCOUNT='f0cfb029f521007125f8d199b0876f4b',ORIGIN='https://hris-qinglingya
 const digest=v=>createHash('sha256').update(v).digest('hex');
 export function usageFaults(usage,day){
  const faults=[];
- for(const [name,value,limit] of [['Workers请求',usage.requests,100000],['D1读取行',usage.rowsRead,5000000],['D1写入行',usage.rowsWritten,100000],['Durable Objects请求',usage.doRequests,100000]]){
+ for(const [name,value,limit] of [['Workers请求',usage.requests,100000],['D1读取行',usage.rowsRead,5000000],['D1写入行',usage.rowsWritten,100000],['Durable Objects请求',usage.doRequests,100000],['Durable Objects运行时长GB秒',usage.doDuration,13000],['Durable Objects读取行',usage.doRowsRead,5000000],['Durable Objects写入行',usage.doRowsWritten,100000]]){
   if(!Number.isFinite(value)||value<0)throw new Error('用量数据不完整');
   const level=value>=limit?100:value>=limit*.95?95:value>=limit*.8?80:0;
   if(level)faults.push({key:`quota:${day}:${name}:${level}`,message:`${name}达到${level}%预警线：${Math.round(value).toLocaleString('zh-CN')} / ${limit.toLocaleString('zh-CN')}，每天北京时间08:00重置。`});
@@ -30,13 +30,13 @@ export async function probe(env,request=fetch){
  throw new Error(`回调入口连续两次探测失败（${last?.message||'未知错误'}）`);
 }
 export async function accountUsage(env,now=new Date(),request=fetch){
- const day=now.toISOString().slice(0,10),query=`query { viewer { accounts(filter:{accountTag:"${ACCOUNT}"}) { workersInvocationsAdaptive(limit:100,filter:{datetime_geq:"${day}T00:00:00Z",datetime_lt:"${now.toISOString()}"}) { sum { requests errors } } pagesFunctionsInvocationsAdaptiveGroups(limit:100,filter:{datetime_geq:"${day}T00:00:00Z",datetime_lt:"${now.toISOString()}"}) { sum { requests } } d1AnalyticsAdaptiveGroups(limit:100,filter:{date_geq:"${day}",date_leq:"${day}"}) { sum { rowsRead rowsWritten } } durableObjectsInvocationsAdaptiveGroups(limit:100,filter:{date_geq:"${day}",date_leq:"${day}"}) { sum { requests } } } } }`;
+ const day=now.toISOString().slice(0,10),query=`query { viewer { accounts(filter:{accountTag:"${ACCOUNT}"}) { workersInvocationsAdaptive(limit:100,filter:{datetime_geq:"${day}T00:00:00Z",datetime_lt:"${now.toISOString()}"}) { sum { requests errors } } pagesFunctionsInvocationsAdaptiveGroups(limit:100,filter:{datetime_geq:"${day}T00:00:00Z",datetime_lt:"${now.toISOString()}"}) { sum { requests } } d1AnalyticsAdaptiveGroups(limit:100,filter:{date_geq:"${day}",date_leq:"${day}"}) { sum { rowsRead rowsWritten } } durableObjectsInvocationsAdaptiveGroups(limit:100,filter:{date_geq:"${day}",date_leq:"${day}"}) { sum { requests } } durableObjectsPeriodicGroups(limit:100,filter:{datetime_geq:"${day}T00:00:00Z",datetime_lt:"${now.toISOString()}"}) { sum { duration rowsRead rowsWritten } } } } }`;
  const d=await jsonRequest('https://api.cloudflare.com/client/v4/graphql',{method:'POST',headers:{Authorization:`Bearer ${env.CLOUDFLARE_API_TOKEN}`,'Content-Type':'application/json'},body:JSON.stringify({query})},request);
  if(d.errors?.length)throw new Error('Cloudflare用量查询被拒绝或返回异常');
  const a=d.data?.viewer?.accounts;if(a?.length!==1)throw new Error('Cloudflare用量账号不完整');
  const sum=(group,key)=>{if(!Array.isArray(group))throw new Error('Cloudflare用量缺失');return group.reduce((n,r)=>{const v=r.sum?.[key];if(!Number.isFinite(v))throw new Error('Cloudflare用量字段缺失');return n+v;},0);};
  const workerRequests=sum(a[0].workersInvocationsAdaptive,'requests'),pagesRequests=sum(a[0].pagesFunctionsInvocationsAdaptiveGroups,'requests');
- return {day,requests:workerRequests+pagesRequests,workerRequests,pagesRequests,rowsRead:sum(a[0].d1AnalyticsAdaptiveGroups,'rowsRead'),rowsWritten:sum(a[0].d1AnalyticsAdaptiveGroups,'rowsWritten'),doRequests:sum(a[0].durableObjectsInvocationsAdaptiveGroups,'requests'),source:'Cloudflare GraphQL Analytics; Workers + Pages account totals; UTC day; analytics may lag or be sampled'};
+ return {day,requests:workerRequests+pagesRequests,workerRequests,pagesRequests,rowsRead:sum(a[0].d1AnalyticsAdaptiveGroups,'rowsRead'),rowsWritten:sum(a[0].d1AnalyticsAdaptiveGroups,'rowsWritten'),doRequests:sum(a[0].durableObjectsInvocationsAdaptiveGroups,'requests'),doDuration:sum(a[0].durableObjectsPeriodicGroups,'duration'),doRowsRead:sum(a[0].durableObjectsPeriodicGroups,'rowsRead'),doRowsWritten:sum(a[0].durableObjectsPeriodicGroups,'rowsWritten'),source:'Cloudflare GraphQL Analytics; Workers + Pages account totals; UTC day; analytics may lag or be sampled'};
 }
 export function pendingNotifications(faults,state){return faults.filter(f=>!f.notified&&!['sent','sending','unknown'].includes(state.alerts?.[digest(f.key)]?.state));}
 export async function sendPrivate(env,text,uuid,request=fetch){
@@ -77,6 +77,7 @@ export async function run(env,request=fetch){
   await save();
  }
  state.last_check=results;state.fault_count=faults.length;await save();
+ if(checks[1].status==='fulfilled')await jsonRequest(ORIGIN+'/monitor/heartbeat',{method:'POST',headers:{Authorization:`Bearer ${env.MONITOR_TOKEN}`}},request);
  console.log(JSON.stringify({...results,faults:faults.map(f=>({key:f.key,message:f.message,notified:!!f.notified})),notifications:Object.values(state.alerts).filter(a=>a.time===now.toISOString()).map(a=>({state:a.state,message_id:a.message_id}))},null,2));
  if(faults.some(f=>!f.key.startsWith('quota:')&&!f.key.startsWith('drill:')))throw new Error('监测发现异常，已按私信去重规则处理。');
  return results;
