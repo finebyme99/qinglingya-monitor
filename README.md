@@ -6,6 +6,8 @@
 
 issue #1 保存机器去重状态，不保存凭证或业务问题正文。发送前保存UUID；未知回执停止自动重发。连续同一异常只提醒一次，探测恢复后重新布防；正常恢复不另发消息。私信失败使工作流失败，需核对日志和去重台账。
 
-依赖仓库四项Secrets：MONITOR_TOKEN（仅健康读取）、CLOUDFLARE_API_TOKEN（本账号Analytics只读）、FEISHU_APP_SECRET、FEISHU_VERIFICATION_TOKEN（真实challenge验证），以及GitHub自动注入的GITHUB_TOKEN。不得提交凭证文件。
+依赖仓库四项Secrets：MONITOR_TOKEN（运行摘要读取及固定监测心跳）、CLOUDFLARE_API_TOKEN（本账号Analytics只读）、FEISHU_APP_SECRET、FEISHU_VERIFICATION_TOKEN（真实challenge验证），以及GitHub自动注入的GITHUB_TOKEN。不得提交凭证文件。
 
 标准Linux runner每月约1440–1488次，单次目标不足1分钟；每月预计约1500免费分钟。长超时会增加用量，免费分钟为账号共享。没有启用付费计划或扩大付费预算。源程序不调用模型。
+
+每次检查向受保护的 `/monitor/heartbeat` 回报服务器时间。内部机器人若连续90分钟未收到回报，会私信提醒外部探测可能停摆；不修改正式发送计划。存储容量和其他Cloudflare产品额度不在本次监测范围内。
