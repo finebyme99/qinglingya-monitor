@@ -22,12 +22,13 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Probe callback, inspect health and usage, privately notify owner
+      - name: Probe callback, inspect health and usage, save results and heartbeat
         env:
           GITHUB_TOKEN: ${{ github.token }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           MONITOR_STATE_ISSUE: '1'
           MONITOR_DRILL: ${{ inputs.drill }}
+          MONITOR_NOTIFICATIONS_ENABLED: 'false'
           MONITOR_TOKEN: ${{ secrets.MONITOR_TOKEN }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           FEISHU_APP_ID: cli_aa5a1974cd38dcc3

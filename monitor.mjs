@@ -69,7 +69,7 @@ export async function run(env,request=fetch){
  for(const [key,alert]of Object.entries(state.alerts))if(!active.has(key)&&(!alert.key?.startsWith('quota:')||Date.parse(alert.time)<now.getTime()-2*86400000))delete state.alerts[key];
  const save=async()=>jsonRequest(endpoint,{method:'PATCH',headers,body:JSON.stringify({body:JSON.stringify(state,null,2)})},request);
  const pending=pendingNotifications(faults,state);
- if(pending.length){
+ if(pending.length&&env.MONITOR_NOTIFICATIONS_ENABLED!=='false'){
   const uuid=randomUUID(),records=pending.map(f=>({key:f.key,state:'sending',uuid,time:now.toISOString()}));
   records.forEach(a=>state.alerts[digest(a.key)]=a);await save();
   try{const message_id=await sendPrivate(env,`【系统问题清零鸭监测提醒】\n${pending.map(f=>'• '+f.message).join('\n')}\n检测时间：${new Date(now.getTime()+8*3600000).toISOString().slice(0,16).replace('T',' ')}（北京时间）\n正式群未额外发消息。`,uuid,request);records.forEach(a=>Object.assign(a,{state:'sent',message_id}));}
@@ -79,7 +79,7 @@ export async function run(env,request=fetch){
  state.last_check=results;state.fault_count=faults.length;await save();
  if(checks[1].status==='fulfilled')await jsonRequest(ORIGIN+'/monitor/heartbeat',{method:'POST',headers:{Authorization:`Bearer ${env.MONITOR_TOKEN}`}},request);
  console.log(JSON.stringify({...results,faults:faults.map(f=>({key:f.key,message:f.message,notified:!!f.notified})),notifications:Object.values(state.alerts).filter(a=>a.time===now.toISOString()).map(a=>({state:a.state,message_id:a.message_id}))},null,2));
- if(faults.some(f=>!f.key.startsWith('quota:')&&!f.key.startsWith('drill:')))throw new Error('监测发现异常，已按私信去重规则处理。');
+ if(faults.some(f=>!f.key.startsWith('quota:')&&!f.key.startsWith('drill:')))throw new Error('监测发现异常，已保存检查结果。');
  return results;
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href)run(process.env).catch(e=>{console.error(e.message);process.exitCode=1;});
