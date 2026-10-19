@@ -1,5 +1,5 @@
 import { SLOTS, STATUS, ANALYSIS_PROMPT, assertTarget, assertDeliveryTarget, deliveryRoute, dueSlots, hash, normalize, localTime, isWeekday, analysisInput, isResolved } from './core.mjs';
-import { buildCards, paginateOpen } from './card.mjs';
+import { buildCards, buildCardPages } from './card.mjs';
 import { Store } from './store.mjs';
 import { Feishu } from './api.mjs';
 import { analyzeIssues } from './analysis.mjs';
@@ -8,7 +8,7 @@ import { BaseLedger, ledgerEnabled, syncLedger, tableIssues } from './ledger.mjs
 import { cardActionsEnabled, decodeCardCallback, acceptCardAction, processCardActions, actionResponse } from './card-actions.mjs';
 import { notifyOwner, notifyCardFailures, checkExternalMonitor } from './alerts.mjs';
 import { monitorAuthorized, monitorStatus } from './monitor.mjs';
-const BUILD='20261019-external-card-members-v15';
+const BUILD='20261019-card-capacity-v16';
 const COMMAND_RULES='20261016-any-member-and-transfer-v2';
 const TABLE_SCOPE='按数据表最新进展统计，仅列未解决事项';
 async function tableData(env,store,api=new Feishu(env)) {
@@ -162,10 +162,9 @@ export async function queueSlot(env,store,data,{id,scheduled_at},prefix='schedul
   if(await store.state(`queued:${key}`)) return key;
   const route=deliveryRoute(env,now,{test:prefix!=='schedule'});
   const scope=data.ledger?{issues:data.issues,scopeLabel:TABLE_SCOPE}:await scopedData(store,data.issues,id,now,true);
-  const cards=buildCards(scope.issues,{slot:id,now,cutoff:data.cutoff,members:data.members,botName:env.BOT_NAME,test:route.test,scopeLabel:scope.scopeLabel,tableUrl:data.ledger?env.BASE_TABLE_URL:null,actions:cardActionsEnabled(env)});
-  const pages=paginateOpen(scope.issues);
-  for(let index=0;index<cards.length;index++){const deliveryId=`${key}:${index+1}`;await store.queue({id:deliveryId,slot:id,scheduled_at,card:cards[index],page:index+1,total_pages:cards.length,target:route.target_chat_id});await store.set(`queue_issues:${deliveryId}`,pages[index].map(i=>i.id));}
-  await store.set(`queued:${key}`,{pages:cards.length,time:new Date().toISOString()});
+  const pages=buildCardPages(scope.issues,{slot:id,now,cutoff:data.cutoff,members:data.members,botName:env.BOT_NAME,test:route.test,scopeLabel:scope.scopeLabel,tableUrl:data.ledger?env.BASE_TABLE_URL:null,actions:cardActionsEnabled(env)});
+  for(const [index,{card,issues}] of pages.entries()){const deliveryId=`${key}:${index+1}`;await store.queue({id:deliveryId,slot:id,scheduled_at,card,page:index+1,total_pages:pages.length,target:route.target_chat_id});await store.set(`queue_issues:${deliveryId}`,issues.map(i=>i.id));}
+  await store.set(`queued:${key}`,{pages:pages.length,time:new Date().toISOString()});
   return key;
 }
 async function incident(env,store,api,error,notify=true) {

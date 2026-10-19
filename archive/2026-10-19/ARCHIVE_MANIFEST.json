@@ -2,12 +2,18 @@
   "archive_date": "2026-10-19",
   "prepared_at": "2026-10-19T02:25:02.096430+00:00",
   "github_visibility_required": "private",
-  "source_build": "20261019-external-card-members-v15",
-  "source_worker_version": "b33d90c3-a1af-4a8f-9ef5-6df1a8d6cdb2",
+  "source_build": "20261019-card-capacity-v16",
+  "source_worker_version": "50bfc8ed-dbf4-479e-9479-1d1155bbc118",
   "last_known_live_verification": {
-    "monitor_run": "https://github.com/finebyme99/qinglingya-monitor/actions/runs/39186908251",
-    "health_build": "20261019-external-card-members-v15",
-    "conclusion": "success"
+    "deployment_id": "b514b2f7-c769-48fc-97d8-0e1470bf7c35",
+    "health_build": "20261019-card-capacity-v16",
+    "conclusion": "deployed_ready_live_preview_and_independent_monitor_verified",
+    "previous_monitor_run": "https://github.com/finebyme99/qinglingya-monitor/actions/runs/39186908251",
+    "previous_monitor_run_build": "20261019-external-card-members-v15",
+    "monitor_run": "https://github.com/finebyme99/qinglingya-monitor/actions/runs/39213164263",
+    "monitor_run_conclusion": "success",
+    "fault_count": 0,
+    "callback_probe_elapsed_ms": 342
   },
   "user_confirmation": {
     "date": "2026-10-19",
@@ -55,7 +61,7 @@
     {
       "file": "src/card.mjs",
       "source": "outputs/cuicuiya/src/card.mjs",
-      "sha256": "e87f690058f3c717b67ef2f25f43679494cd4eed713606e6d813127ee4a27fb8"
+      "sha256": "8b4eedc70e576769dc286df2421e1d95134704aa2d6319260a59a1753c1bb0ad"
     },
     {
       "file": "src/core.mjs",
@@ -85,17 +91,17 @@
     {
       "file": "src/worker.mjs",
       "source": "outputs/cuicuiya/src/worker.mjs",
-      "sha256": "234f3459844416bb13636e7e5d60b7cd8a3e49ad3bd12567cef5e64265151588"
+      "sha256": "04ee93022e06bb17c9efcb2e8a1c62577077eeaae7a36fe94f8acc9c9be64e8e"
     },
     {
       "file": "test/bot.test.mjs",
       "source": "outputs/cuicuiya/test/bot.test.mjs",
-      "sha256": "a0d8c446673ca118e618c4329eb66cb9c188a6b2ec3dd9cdf39dd51ddde337c9"
+      "sha256": "4c434e7c6c0e62be6c8a2a6cf4cad03c12f539f44b69c49ad83e5fab04ebf623"
     },
     {
       "file": "test/card-actions.test.mjs",
       "source": "outputs/cuicuiya/test/card-actions.test.mjs",
-      "sha256": "4ab82849a070e9e1121b21c5994787f26f9a8fecc95f5cefd46b093ae61ed33d"
+      "sha256": "67d81ee4eb656db600c21f9d254cd3ff569fd6dfd83b6d9ab81b42d0d8f13f76"
     },
     {
       "file": "test/ledger.test.mjs",
@@ -157,7 +163,7 @@
   ],
   "knowledge_status": {
     "code": "verified-current; key source hashes match deployed release evidence",
-    "runtime": "last known live verification recorded; no new deployment performed for archive",
+    "runtime": "verified-current; active Worker version, live status/preview, callback probe and independent monitor verified",
     "docs": "changed-and-verified",
     "rules": "changed-and-verified",
     "memory": "out-of-scope; unchanged",
@@ -165,9 +171,9 @@
   },
   "archive_tests": {
     "node": "v22.23.2",
-    "bot_passed": 83,
+    "bot_passed": 89,
     "monitor_passed": 10,
-    "total_passed": 93,
+    "total_passed": 99,
     "failed": 0,
     "skipped": 0,
     "syntax_check": "passed",
@@ -176,10 +182,17 @@
     "credential_filename_and_common_token_pattern_audit": "passed",
     "actual_credentials_read": false,
     "real_messages_sent": 0,
-    "live_deployment_for_archive": false
+    "live_deployment_for_archive": false,
+    "new_native_feishu_test_messages_sent": 0,
+    "rendering_verification": "Local HTML approximation and live read-only preview; screenshot capture timed out; no new native visual acceptance",
+    "existing_layout_lint_warning": "container-depth unchanged from previous release",
+    "feature_deployment_in_this_update": true
   },
   "github_repository": "finebyme99/qinglingya-monitor",
   "repository_directory": "archive/2026-10-19",
-  "publication_scope": "Source snapshot only; existing root monitor workflow remains unchanged; no production deployment",
-  "monitor_root_baseline_commit": "85b50cfdd6ad36f95b906c5fe75ecba98c26fa2c"
+  "publication_scope": "Source snapshot of separately deployed v16; the existing root monitor remains unchanged and this archive commit has no deployment workflow",
+  "monitor_root_baseline_commit": "4c20cb96bafd19571ad322d3b0d45828108cae04",
+  "updated_at": "2026-10-19T07:01:25.591020+00:00",
+  "previous_source_build": "20261019-external-card-members-v15",
+  "previous_source_worker_version": "b33d90c3-a1af-4a8f-9ef5-6df1a8d6cdb2"
 }

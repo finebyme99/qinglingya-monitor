@@ -69,10 +69,10 @@ test('转交后仍保留原跟进人，未知人员和虚构原消息被拒绝',
   assert.throws(()=>validateIssues([{...issue,owner_ids:['ou_fake']}],[root],[],people));
   assert.throws(()=>validateIssues([{...issue,root_id:'om_fake'}],[root],[],people));
 });
-test('卡片无编号、原生艾特、指标等高配置，跨日遗留全部分页保留',()=>{
+test('卡片无编号、原生艾特、指标等高配置，跨日遗留优先单卡完整保留',()=>{
   const i=validateIssues([issue],[root],[],people)[0];
   const cards=buildCards(Array.from({length:13},(_,n)=>({...i,id:`issue${n}`,title:`问题${n}`})),{slot:'0930',now:new Date('2026-10-15T01:30:00Z')});
-  assert.equal(cards.length,3);
+  assert.equal(cards.length,1);
   assert.equal(cards[0].header.title.content,'昨日待解决，今天继续清零');
   assert.equal(cards[0].config.width_mode,'fill');
   assert.ok(cards[0].body.elements[0].columns.every(c=>c.vertical_align==='top'));
@@ -330,7 +330,7 @@ test('全表生成提醒时只对未解决事项分页及关联，每页提供�
   const open=Array.from({length:7},(_,i)=>({...base,id:`open_${i}`,title:`待处理事项${i}`}));
   const issues=[...open,{...base,id:'done',status:'closed',title:'完成后隐藏的事项'},{...base,id:'converted',status:'converted',title:'转需求后隐藏的事项'}];
   await queueSlot({SOURCE_CHAT_ID:'oc_source',TARGET_CHAT_ID:'oc_test',ALLOWED_TARGET_CHAT_ID:'oc_test',BASE_TABLE_URL:tableUrl},store,{ledger:true,issues,members:people,cutoff:new Date('2026-10-16T02:00:00Z')},{id:'1330',scheduled_at:'2026-10-16T02:00:00Z'},'test-card-v9');
-  const deliveries=await store.pending();assert.equal(deliveries.length,2);const ids=[];
+  const deliveries=await store.pending();assert.equal(deliveries.length,1);const ids=[];
   for(const d of deliveries){const card=JSON.parse(d.card),body=JSON.stringify(card);assert.doesNotMatch(body,/完成后隐藏的事项|转需求后隐藏的事项/);assert.match(body,/>2<\/font>/);assert.match(body,/若已完成，可在群内回复：问题标题\+已完成。或随时进入数据源表更新进展，以人工更新进展为准：/);const button=card.body.elements.at(-1);assert.equal(button.text.content,'查记录or人工更新进展');assert.deepEqual(button.behaviors,[{type:'open_url',default_url:tableUrl}]);ids.push(...await store.state(`queue_issues:${d.id}`));}
   assert.deepEqual(new Set(ids),new Set(open.map(i=>i.id)));
 });
@@ -339,4 +339,58 @@ test('IT已回复并明确等反馈人复查时归HRIS，不把仍待IT排查或
   const raw={...issue,status:'pending',note:'IT回复删除后后台也无记录，待反馈人确认是否仍冲突并给出后续处理',evidence_ids:[root.id,response.id]};
   assert.equal(validateIssues([raw],[root,response],[],people)[0].status,'waiting_confirmation');
   for(const note of ['反馈人确认仍有冲突，待IT继续排查','IT尚未回复，待反馈人确认后再联系IT','IT仍在排查，稍后请反馈人验证','反馈人说需要确认，但IT尚未处理','无需反馈人确认，IT已接收处理'])assert.notEqual(validateIssues([{...raw,note}],[root,response],[],people)[0].status,'waiting_confirmation',note);
+});
+
+function cardIssueIds(card) {
+  const ids=[];
+  function visit(node){if(!node||typeof node!=='object')return;if(node.type==='callback'&&node.value?.action==='resolve_issue')ids.push(node.value.issue_id);for(const value of Object.values(node))if(typeof value==='object')visit(value);}
+  visit(card);return ids;
+}
+function cardSize(card){return {bytes:new TextEncoder().encode(JSON.stringify(card)).length,elements:(JSON.stringify(card).match(/"tag":/g)||[]).length};}
+const pageIssue=n=>({id:`p${n}`,record_id:`rec_p${n}`,title:`待处理问题${n}`,status:n%2?'waiting_confirmation':'pending',owner_ids:['ou_owner'],reporter_id:'ou_reporter',created_at:'2026-10-16T01:00:00Z',note:'待复查',source_url:'https://example.test/source'});
+const pageOptions={slot:'1330',now:new Date('2026-10-16T05:30:00Z'),actions:true,tableUrl:'https://example.test/table'};
+
+test('超过六项且包含二次确认按钮时，仍优先一张卡片，不显示分页标记',()=>{
+  const issues=Array.from({length:13},(_,n)=>pageIssue(n)),cards=buildCards(issues,pageOptions);
+  assert.equal(cards.length,1);assert.equal(cardIssueIds(cards[0]).length,13);
+  assert.doesNotMatch(cards[0].header.subtitle.content,/\d+\/\d+/);
+  assert.doesNotMatch(cards[0].body.elements.find(e=>e.tag==='markdown').content,/第\d+\/\d+页/);
+});
+test('短内容也遵守组件总数限制，不能只测字节数；各页保留完整按钮',()=>{
+  const issues=Array.from({length:24},(_,n)=>pageIssue(n)),cards=buildCards(issues,pageOptions);
+  assert.ok(cards.length>1);assert.ok(cardIssueIds(cards[0]).length>6);
+  for(const card of cards){const size=cardSize(card);assert.ok(size.bytes<=28000);assert.ok(size.elements<=200);}
+  assert.deepEqual(new Set(cards.flatMap(cardIssueIds)),new Set(issues.map(i=>i.id)));
+  assert.equal(cards.flatMap(cardIssueIds).length,issues.length);
+});
+test('中文与表情的真实字节超限自动分页，双位数页码仍在限额内且不漏项',()=>{
+  const issues=Array.from({length:120},(_,n)=>({...pageIssue(n),note:'核查😀'.repeat(400)}));
+  const cards=buildCards([...issues,{...pageIssue('closed'),status:'closed'}],pageOptions);
+  assert.ok(cards.length>=10);
+  for(const [index,card] of cards.entries()){
+    const size=cardSize(card);assert.ok(size.bytes<=28000,JSON.stringify(size));assert.ok(size.elements<=200);
+    assert.ok(card.header.subtitle.content.endsWith(`｜${index+1}/${cards.length}`));
+    assert.ok(card.body.elements.find(e=>e.tag==='markdown').content.includes(`第${index+1}/${cards.length}页`));
+  }
+  const ids=cards.flatMap(cardIssueIds);assert.equal(ids.length,issues.length);assert.deepEqual(new Set(ids),new Set(issues.map(i=>i.id)));
+});
+test('投递页的授权问题列表与该页实际按钮一致，重复建单不改变分页或额外发送',async()=>{
+  const store=new Store(db()),issues=Array.from({length:24},(_,n)=>pageIssue(n));
+  const env={SOURCE_CHAT_ID:'oc_source',TARGET_CHAT_ID:'oc_test',ALLOWED_TARGET_CHAT_ID:'oc_test',BASE_TABLE_URL:pageOptions.tableUrl,CARD_ACTIONS_ENABLED:'true'};
+  const data={ledger:true,issues,members:people,cutoff:pageOptions.now},slot={id:'1330',scheduled_at:pageOptions.now.toISOString()};
+  const key=await queueSlot(env,store,data,slot,'test-capacity',pageOptions.now);
+  await queueSlot(env,store,data,slot,'test-capacity',pageOptions.now);
+  const deliveries=(await store.pending()).sort((a,b)=>a.page-b.page),allIds=[];
+  assert.ok(deliveries.length>1);assert.equal((await store.state(`queued:${key}`)).pages,deliveries.length);
+  for(const [index,delivery] of deliveries.entries()){
+    const card=JSON.parse(delivery.card),ids=await store.state(`queue_issues:${delivery.id}`);
+    assert.deepEqual(new Set(ids),new Set(cardIssueIds(card)));assert.equal(ids.length,cardIssueIds(card).length);
+    assert.equal(delivery.page,index+1);assert.equal(delivery.total_pages,deliveries.length);allIds.push(...ids);
+  }
+  assert.equal(allIds.length,issues.length);assert.deepEqual(new Set(allIds),new Set(issues.map(i=>i.id)));
+});
+test('单个事项超出卡片限额会明确失败，不截断事项，也不留下部分投递',async()=>{
+  const store=new Store(db()),oversized={...pageIssue('large'),note:'完整内容😀'.repeat(10000)};
+  await assert.rejects(()=>queueSlot({SOURCE_CHAT_ID:'oc_source',TARGET_CHAT_ID:'oc_test',ALLOWED_TARGET_CHAT_ID:'oc_test',CARD_ACTIONS_ENABLED:'true'},store,{ledger:true,issues:[pageIssue(0),oversized],members:people,cutoff:pageOptions.now},{id:'1330',scheduled_at:pageOptions.now.toISOString()},'test-oversize',pageOptions.now),/单个事项.*超出/);
+  assert.equal((await store.pending()).length,0);
 });

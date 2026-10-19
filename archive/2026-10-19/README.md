@@ -2,7 +2,7 @@
 
 截至2026-10-19的项目快照，包含机器人、回调转接、外部巡检、业务规则、测试和恢复说明。存放于私有仓库 [finebyme99/qinglingya-monitor](https://github.com/finebyme99/qinglingya-monitor) 的 `archive/2026-10-19/` 目录。
 
-本存档的发布基线是 `20261019-external-card-members-v15`，Cloudflare Worker版本 `b33d90c3-a1af-4a8f-9ef5-6df1a8d6cdb2`。用户随后在本聊天反馈“已解决”，确认外部成员按钮问题已解决；此处记录的是用户反馈，不冒充另一次独立回调核查。
+本存档的发布基线是 `20261019-card-capacity-v16`，Cloudflare Worker版本 `50bfc8ed-dbf4-479e-9479-1d1155bbc118`。卡片已改为按实际容量优先合为一张，并保留此前的外部群成员按钮修复。见[发布记录](docs/RELEASES.md)。
 
 | 内容 | 位置 |
 | --- | --- |
@@ -12,6 +12,7 @@
 | Pages回调转接 | [callback-bridge/](callback-bridge/) |
 | 外部巡检代码和工作流快照 | [external-monitor/](external-monitor/) |
 | 现役业务规则 | [业务规则](docs/BUSINESS_RULES.md) |
+| 当前发布和验证范围 | [发布记录](docs/RELEASES.md) |
 | 恢复、部署和密钥配置说明 | [运维说明](docs/OPERATIONS.md) |
 | 后续AI协作约束 | [AGENTS.md](AGENTS.md) |
 | 归档清单、版本和文件校验值 | [ARCHIVE_MANIFEST.json](ARCHIVE_MANIFEST.json) |
@@ -19,7 +20,7 @@
 
 ## 本地验证
 
-本次使用Node.js `v22.23.2`。在这份独立目录中，机器人83项、外部巡检10项，共93项测试全部通过，语法检查通过。测试使用虚构数据、模拟请求和内存数据库，不需要生产凭证。
+本次使用Node.js `v22.23.2`。机器人89项、外部巡检10项，共99项测试全部通过，语法检查通过；归档代码与本次验证和发布的源文件逐项核对一致。测试使用虚构数据、模拟请求和内存数据库，不需要生产凭证。
 
 ```sh
 npm test
