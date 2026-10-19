@@ -1,0 +1,14 @@
+{
+  "name": "cuicuiya-hris-bot",
+  "private": true,
+  "type": "module",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "check": "node --check src/worker.mjs",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "4.144.0"
+  }
+}

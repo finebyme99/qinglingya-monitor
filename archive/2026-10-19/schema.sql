@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS state (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS messages (id TEXT PRIMARY KEY, chat_id TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL, payload TEXT NOT NULL, hash TEXT NOT NULL, analyzed_hash TEXT);
+CREATE INDEX IF NOT EXISTS messages_created ON messages(created_at);
+CREATE TABLE IF NOT EXISTS issues (id TEXT PRIMARY KEY, root_id TEXT NOT NULL, status TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL, payload TEXT NOT NULL);
+CREATE INDEX IF NOT EXISTS issues_status ON issues(status);
+CREATE TABLE IF NOT EXISTS deliveries (id TEXT PRIMARY KEY, slot TEXT NOT NULL, scheduled_at TEXT NOT NULL, target_chat_id TEXT NOT NULL, page INTEGER NOT NULL, total_pages INTEGER NOT NULL, uuid TEXT NOT NULL, card TEXT NOT NULL, state TEXT NOT NULL, message_id TEXT, attempts INTEGER NOT NULL DEFAULT 0, updated_at TEXT NOT NULL, error TEXT);
+CREATE TABLE IF NOT EXISTS events (id INTEGER PRIMARY KEY AUTOINCREMENT, time TEXT NOT NULL, type TEXT NOT NULL, detail TEXT NOT NULL);

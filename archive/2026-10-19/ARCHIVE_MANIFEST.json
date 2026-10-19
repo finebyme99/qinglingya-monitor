@@ -1,0 +1,185 @@
+{
+  "archive_date": "2026-10-19",
+  "prepared_at": "2026-10-19T02:25:02.096430+00:00",
+  "github_visibility_required": "private",
+  "source_build": "20261019-external-card-members-v15",
+  "source_worker_version": "b33d90c3-a1af-4a8f-9ef5-6df1a8d6cdb2",
+  "last_known_live_verification": {
+    "monitor_run": "https://github.com/finebyme99/qinglingya-monitor/actions/runs/39186908251",
+    "health_build": "20261019-external-card-members-v15",
+    "conclusion": "success"
+  },
+  "user_confirmation": {
+    "date": "2026-10-19",
+    "text": "已解决",
+    "source": "human message in current chat; no additional callback readback inferred"
+  },
+  "external_monitor_repository": "https://github.com/finebyme99/qinglingya-monitor",
+  "external_monitor_commit": "85b50cfdd6ad36f95b906c5fe75ecba98c26fa2c",
+  "copied_source_files": [
+    {
+      "file": "package.json",
+      "source": "outputs/cuicuiya/package.json",
+      "sha256": "40a16d460e469035d769b23fc0a62867485663d8f971f45e247d80c49acb2501"
+    },
+    {
+      "file": "schema.sql",
+      "source": "outputs/cuicuiya/schema.sql",
+      "sha256": "0b9d9a31ffb092cc7513063094ce4f8cc63a3e99a18d402ae5a8450ea3d12244"
+    },
+    {
+      "file": "wrangler.jsonc",
+      "source": "outputs/cuicuiya/wrangler.jsonc",
+      "sha256": "b89d29cfa0665fcef0c7145743dc552966d89d9de9dde50bc693a12f9e8e711f"
+    },
+    {
+      "file": "src/alerts.mjs",
+      "source": "outputs/cuicuiya/src/alerts.mjs",
+      "sha256": "e7d76b56708d88cfc9b4fdcfaf66e7393431e708baa8c9f298f1796bebd6812f"
+    },
+    {
+      "file": "src/analysis.mjs",
+      "source": "outputs/cuicuiya/src/analysis.mjs",
+      "sha256": "af41a9d10ee22c8ca254cc31cc365f44d354d5bcdc54a4424a4777b1a7fd3244"
+    },
+    {
+      "file": "src/api.mjs",
+      "source": "outputs/cuicuiya/src/api.mjs",
+      "sha256": "dce0786524bd8e0cb81f3a0dd93794ffc579675e7b5a9eebc5a2549485a55544"
+    },
+    {
+      "file": "src/card-actions.mjs",
+      "source": "outputs/cuicuiya/src/card-actions.mjs",
+      "sha256": "0c8a298c9a0e1d2409e51ab3ef0d7d12152aa21e2687bfa8ed8c72e8d0236275"
+    },
+    {
+      "file": "src/card.mjs",
+      "source": "outputs/cuicuiya/src/card.mjs",
+      "sha256": "e87f690058f3c717b67ef2f25f43679494cd4eed713606e6d813127ee4a27fb8"
+    },
+    {
+      "file": "src/core.mjs",
+      "source": "outputs/cuicuiya/src/core.mjs",
+      "sha256": "78a83e40833b2db6b4f40304ee273710ef3b38ca24206432225bdb1c7fd93385"
+    },
+    {
+      "file": "src/ledger.mjs",
+      "source": "outputs/cuicuiya/src/ledger.mjs",
+      "sha256": "066e65dee4926604fc934d291db3a86740ab87a2dc7ce0f401b24289db3fd89c"
+    },
+    {
+      "file": "src/monitor.mjs",
+      "source": "outputs/cuicuiya/src/monitor.mjs",
+      "sha256": "8fda26aafa7c2a47639eb235f788e65b0fe58b9f3dd63f4dc66124708a4eae0a"
+    },
+    {
+      "file": "src/store.mjs",
+      "source": "outputs/cuicuiya/src/store.mjs",
+      "sha256": "69c48c0157172c9a8a64014432f4faf52a3c619a707b1212b71166f661fcc093"
+    },
+    {
+      "file": "src/tracking.mjs",
+      "source": "outputs/cuicuiya/src/tracking.mjs",
+      "sha256": "8777a3a7e08d28be043eeaad396a2bc5695be8b90342c4834c859088646a22ab"
+    },
+    {
+      "file": "src/worker.mjs",
+      "source": "outputs/cuicuiya/src/worker.mjs",
+      "sha256": "234f3459844416bb13636e7e5d60b7cd8a3e49ad3bd12567cef5e64265151588"
+    },
+    {
+      "file": "test/bot.test.mjs",
+      "source": "outputs/cuicuiya/test/bot.test.mjs",
+      "sha256": "a0d8c446673ca118e618c4329eb66cb9c188a6b2ec3dd9cdf39dd51ddde337c9"
+    },
+    {
+      "file": "test/card-actions.test.mjs",
+      "source": "outputs/cuicuiya/test/card-actions.test.mjs",
+      "sha256": "4ab82849a070e9e1121b21c5994787f26f9a8fecc95f5cefd46b093ae61ed33d"
+    },
+    {
+      "file": "test/ledger.test.mjs",
+      "source": "outputs/cuicuiya/test/ledger.test.mjs",
+      "sha256": "ca2c990484f97ac3e80bd15b0bc0b0e826633f5387ca259c5bdddefe8a455a7c"
+    },
+    {
+      "file": "test/mimo-json.test.mjs",
+      "source": "outputs/cuicuiya/test/mimo-json.test.mjs",
+      "sha256": "72d078ab15d89c027226063c21c2a502fd5ac41ea8351efe257d2cb37df51c2f"
+    },
+    {
+      "file": "test/monitor.test.mjs",
+      "source": "outputs/cuicuiya/test/monitor.test.mjs",
+      "sha256": "4b0f45200f0171b187296e73b489d80e669143c99da4b748b1227ff038caf057"
+    },
+    {
+      "file": "callback-bridge/wrangler.jsonc",
+      "source": "outputs/cuicuiya/callback-bridge/wrangler.jsonc",
+      "sha256": "d9d01d5b89ed5c8bcc2e853e0869aefeae0b4fed73f9c7fb7d92e14e0c84f962"
+    },
+    {
+      "file": "callback-bridge/public/_worker.js",
+      "source": "outputs/cuicuiya/callback-bridge/public/_worker.js",
+      "sha256": "ac7f08d8e946d67fe3296a0432db62e0cac01f09bfdb94dcb358e0878c1ba9f3"
+    },
+    {
+      "file": "external-monitor/monitor.mjs",
+      "source": "outputs/cuicuiya/external-monitor/monitor.mjs",
+      "sha256": "b4bd13a02b307530f880658808c46943a7c89c18f634590f1723f1e97d6315b8"
+    },
+    {
+      "file": "external-monitor/test/monitor.test.mjs",
+      "source": "outputs/cuicuiya/external-monitor/test/monitor.test.mjs",
+      "sha256": "a2162dcd2c7357c4fae0e7572572f4e4aa6334a5f0da49611ad8790cfa9984bb"
+    },
+    {
+      "file": "external-monitor/.github/workflows/monitor.yml",
+      "source": "outputs/cuicuiya/external-monitor/.github/workflows/monitor.yml",
+      "sha256": "f8e42b5c37ebe69f99eb3a51f91d6b8088711911a1422e7d43b0c0b499f4f956"
+    },
+    {
+      "file": "external-monitor/README.md",
+      "source": "outputs/cuicuiya/external-monitor/README.md",
+      "sha256": "a9989ee55aa8f7cc02b1a022b1ec3d4618ec80db8ca64bdeea01a43ff4afb917"
+    }
+  ],
+  "excluded": [
+    "actual credentials",
+    "production D1 contents",
+    "group message logs",
+    "employee issue records",
+    "Bitable records",
+    "real callback or delivery receipts",
+    "raw logs and local audit JSON",
+    "nested Git metadata",
+    "global skills and machine-generated memory",
+    "node_modules and .wrangler caches"
+  ],
+  "knowledge_status": {
+    "code": "verified-current; key source hashes match deployed release evidence",
+    "runtime": "last known live verification recorded; no new deployment performed for archive",
+    "docs": "changed-and-verified",
+    "rules": "changed-and-verified",
+    "memory": "out-of-scope; unchanged",
+    "original_workspace": "preserved; no deletion or relocation"
+  },
+  "archive_tests": {
+    "node": "v22.23.2",
+    "bot_passed": 83,
+    "monitor_passed": 10,
+    "total_passed": 93,
+    "failed": 0,
+    "skipped": 0,
+    "syntax_check": "passed",
+    "copied_source_hashes": "matched",
+    "local_doc_links": "passed",
+    "credential_filename_and_common_token_pattern_audit": "passed",
+    "actual_credentials_read": false,
+    "real_messages_sent": 0,
+    "live_deployment_for_archive": false
+  },
+  "github_repository": "finebyme99/qinglingya-monitor",
+  "repository_directory": "archive/2026-10-19",
+  "publication_scope": "Source snapshot only; existing root monitor workflow remains unchanged; no production deployment",
+  "monitor_root_baseline_commit": "85b50cfdd6ad36f95b906c5fe75ecba98c26fa2c"
+}

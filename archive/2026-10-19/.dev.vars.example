@@ -1,0 +1,8 @@
+# Template only. Fill locally or use the platform's secret manager; never commit actual values.
+FEISHU_APP_SECRET=
+MIMO_API_KEY=
+ADMIN_TOKEN=
+FEISHU_VERIFICATION_TOKEN=
+MONITOR_TOKEN=
+# Optional; current deployment does not enable callback encryption.
+# FEISHU_ENCRYPT_KEY=

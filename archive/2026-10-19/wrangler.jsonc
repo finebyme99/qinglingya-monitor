@@ -1,0 +1,55 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "hris-qinglingya-test",
+  "main": "src/worker.mjs",
+  "compatibility_date": "2026-10-15",
+  "account_id": "f0cfb029f521007125f8d199b0876f4b",
+  "workers_dev": true,
+  "observability": {
+    "enabled": true
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "cuicuiya-hris-test",
+      "database_id": "46f82e87-d9e6-498e-a019-61000f02013d"
+    }
+  ],
+  "vars": {
+    "BOT_NAME": "系统问题清零鸭",
+    "FEISHU_APP_ID": "cli_aa5a1974cd38dcc3",
+    "BOT_OPEN_ID": "ou_456055309e8a61d337536a34d6f852b2",
+    "SOURCE_CHAT_ID": "oc_1d8ca6b0a62bd859c4a5fe17017374bf",
+    "TARGET_CHAT_ID": "oc_db567eb0cf87800250a5d428f385e765",
+    "ALLOWED_TARGET_CHAT_ID": "oc_db567eb0cf87800250a5d428f385e765",
+    "PRODUCTION_CHAT_ID": "oc_1d8ca6b0a62bd859c4a5fe17017374bf",
+    "PRODUCTION_START_AT": "2026-10-16T09:30:00+08:00",
+    "BASE_LEDGER_ENABLED": "true",
+    "BASE_TOKEN": "A03xbPnbPaoYhasOPHXc7Gv8nTd",
+    "BASE_TABLE_ID": "tbl8SYS6DJB458Y1",
+    "BASE_TABLE_URL": "https://ztn.larkenterprise.com/wiki/Q2PhwhMCliEWRNkvfcRch6qKnAb?table=tbl8SYS6DJB458Y1&view=vewVuKmcJm",
+    "MIMO_BASE_URL": "https://api.xiaomimimo.com/v1",
+    "MIMO_MODEL": "mimo-v2.6-flash",
+    "BOOTSTRAP_DAYS": "7",
+    "CARD_ACTIONS_ENABLED": "true",
+    "ALERT_NOTIFICATIONS_ENABLED": "false",
+    "ALERT_OWNER_OPEN_ID": "ou_0121f356ab8eee1a18ebe80794302bf1",
+    "MONITORING_ENABLED_AT": "2026-10-16T05:03:00Z"
+  },
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "SCHEDULER",
+        "class_name": "Scheduler"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": [
+        "Scheduler"
+      ]
+    }
+  ]
+}

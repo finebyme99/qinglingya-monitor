@@ -1,0 +1,38 @@
+name: Qinglingya private monitor
+on:
+  schedule:
+    - cron: '17,47 * * * *'
+  workflow_dispatch:
+    inputs:
+      drill:
+        description: Send one clearly labeled private notification drill
+        type: boolean
+        default: false
+permissions:
+  contents: read
+  issues: write
+concurrency:
+  group: qinglingya-monitor
+  cancel-in-progress: false
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Probe callback, inspect health and usage, save results and heartbeat
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          MONITOR_STATE_ISSUE: '1'
+          MONITOR_DRILL: ${{ inputs.drill }}
+          MONITOR_NOTIFICATIONS_ENABLED: 'false'
+          MONITOR_TOKEN: ${{ secrets.MONITOR_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          FEISHU_APP_ID: cli_aa5a1974cd38dcc3
+          FEISHU_APP_SECRET: ${{ secrets.FEISHU_APP_SECRET }}
+          FEISHU_VERIFICATION_TOKEN: ${{ secrets.FEISHU_VERIFICATION_TOKEN }}
+          ALERT_OWNER_OPEN_ID: ou_0121f356ab8eee1a18ebe80794302bf1
+        run: node monitor.mjs
