@@ -6,6 +6,12 @@ export const cardActionsEnabled=env=>env.CARD_ACTIONS_ENABLED==='true';
 const forbidden=message=>Object.assign(new Error(message),{status:403});
 const equal=(a,b)=>typeof a==='string'&&typeof b==='string'&&a.length===b.length&&[...a].reduce((n,c,i)=>n|(c.charCodeAt(0)^b.charCodeAt(i)),0)===0;
 const jobKey=id=>`card_action:${id}`;
+async function canonicalAction(store,issueId,recordId) {
+  const alias=await store.state(`issue_alias:${issueId}`);
+  if(!alias)return {issue_id:issueId,record_id:recordId};
+  if(alias.from_record_id!==recordId||!alias.issue_id||!alias.record_id||alias.issue_id===issueId||await store.state(`issue_alias:${alias.issue_id}`))throw forbidden('合并记录关联无效');
+  return {issue_id:alias.issue_id,record_id:alias.record_id};
+}
 
 export async function decodeCardCallback(request,env,now=Date.now()) {
   if(!env.FEISHU_VERIFICATION_TOKEN)throw forbidden('卡片回调尚未配置');
@@ -64,8 +70,11 @@ async function refreshCard(env,store,api,job,ledger,now) {
     for(let index=1;index<elements.length;index++) {
       const row=elements[index],button=row.columns?.[0]?.elements?.[0]?.columns?.[1]?.elements?.[0];
       const id=button?.behaviors?.find(b=>b.type==='callback')?.value?.issue_id;
-      if(!id)continue;const issue=byId.get(id);if(!issue)throw new Error('原卡片记录已删除，无法刷新');
-      elements[index]=issueCardRow(issue,{now,members,actions:true});matched++;if(!isResolved(issue.status))unresolved++;
+      if(!id)continue;
+      const original=button.behaviors.find(b=>b.type==='callback').value,target=await canonicalAction(store,id,original.record_id);
+      const issue=byId.get(target.issue_id);if(!issue||issue.record_id!==target.record_id)throw new Error('原卡片记录已删除，无法刷新');
+      // Preserve the original signed/authorized button tuple even after an approved record merge.
+      elements[index]=issueCardRow({...issue,id,record_id:original.record_id},{now,members,actions:true});matched++;if(!isResolved(issue.status))unresolved++;
     }
     if(matched)elements[0].content=`**${elements[0].content.includes('HRIS')?'HRIS':'IT'}事项 · 未解决${unresolved}项**`;
   }
@@ -89,8 +98,9 @@ export async function processCardActions(env,store,api,{eventId=null,now=new Dat
       if(job.state!=='refresh_pending') {
         const people=await api.members(job.chat_id);
         if(!Object.hasOwn(people,job.actor_id))throw forbidden('操作人不在该群');
-        const row=(await ledger.records()).find(r=>r.id===job.record_id);
-        if(!row||!((row.fields[F.key]||`table:${row.id}`)===job.issue_id))throw forbidden('原记录已删除或关联已改变');
+        const target=await canonicalAction(store,job.issue_id,job.record_id);
+        const row=(await ledger.records()).find(r=>r.id===target.record_id);
+        if(!row||!((row.fields[F.key]||`table:${row.id}`)===target.issue_id))throw forbidden('原记录已删除或关联已改变');
         const current=tableIssues([row])[0];
         const ownEvidence=String(row.fields[F.evidence]||'').includes(`"event_id":"${job.event_id}"`);
         job={...job,state:'updating'};await store.set(jobKey(job.event_id),job);
@@ -101,12 +111,12 @@ export async function processCardActions(env,store,api,{eventId=null,now=new Dat
           await ledger.update(row.id,{[F.status]:['已处理'],[F.manual]:true,[F.evidence]:combined});
           job.changed=true;
         }else job.changed=ownEvidence;
-        const verified=(await ledger.records()).find(r=>r.id===job.record_id);
+        const verified=(await ledger.records()).find(r=>r.id===target.record_id);
         if(!verified||!isResolved(tableIssues([verified])[0].status))throw new Error('已解决状态尚未读回，稍后自动核对');
         if(job.changed) {
-          const cached=(await store.rows('issues')).find(i=>i.id===job.issue_id);
+          const cached=(await store.rows('issues')).find(i=>i.id===target.issue_id);
           if(cached)await store.putIssues([{...cached,status:'closed',status_label:'已解决',note:`${localTime(now)} · ${people[job.actor_id]||'群成员'}通过卡片确认已解决。`,updated_at:now.toISOString(),closure_message_id:job.message_id,resolution:{type:'card_button',message_id:job.message_id,chat_id:job.chat_id,actor_id:job.actor_id,time:job.time,event_id:job.event_id}}]);
-          const mapKey=`ledger_map:${job.issue_id}`,mapping=await store.state(mapKey);
+          const mapKey=`ledger_map:${target.issue_id}`,mapping=await store.state(mapKey);
           if(mapping)await store.set(mapKey,{...mapping,manual:true,flag_seen:true});
         }
         job={...job,state:'refresh_pending',data_saved_at:now.toISOString()};await store.set(jobKey(job.event_id),job);

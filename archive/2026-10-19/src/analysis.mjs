@@ -1,6 +1,18 @@
 import { analyze } from './api.mjs';
 import { validateIssues } from './core.mjs';
 
+export async function analysisImages(api,context,focus,previous) {
+  const senders=new Set(focus.map(m=>m.sender_id)),ids=new Set(focus.map(m=>m.id));
+  for(const issue of previous)if(senders.has(issue.reporter_id))ids.add(issue.root_id);
+  const refs=new Map();for(const message of context)if(ids.has(message.id))for(const ref of message.image_refs||[])refs.set(`${ref.message_id}:${ref.key}`,ref);
+  const images=[];let size=0;
+  for(const ref of refs.values()){
+    const url=await api.image(ref);size+=url.length;if(size>16*1024*1024)throw new Error('本批图片超过16MiB，保留断点等待核查');
+    images.push({...ref,url});
+  }
+  return images;
+}
+
 export async function analyzeIssues(env,input,prompt,{messages,previous,members,onInvalid=async()=>{}},requestAnalysis=analyze) {
   let correction=null,formatRetries=0;
   const deadline=Date.now()+Number(env.AI_TIMEOUT_MS||110000);

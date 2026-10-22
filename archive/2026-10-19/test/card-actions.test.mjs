@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {DatabaseSync} from 'node:sqlite';
 import {readFileSync} from 'node:fs';
 import {Store} from '../src/store.mjs';
-import {queueSlot} from '../src/worker.mjs';
+import {queueSlot,tick} from '../src/worker.mjs';
 import {buildCards} from '../src/card.mjs';
 import {hash,validateIssues} from '../src/core.mjs';
 import {BASE_FIELDS as F,tableIssues} from '../src/ledger.mjs';
@@ -17,6 +17,32 @@ const issue={id:'om_root:main',root_id:'om_root',facet:'main',record_id:'rec_mai
 class Ledger {constructor(items=[issue]){this.rows=items.map(i=>({id:i.record_id,fields:{[F.title]:i.title,[F.key]:i.id,[F.status]:['待IT跟进'],[F.note]:i.note,[F.manual]:true,[F.evidence]:''}}));this.writes=[];}async records(){return structuredClone(this.rows);}async update(id,fields){this.writes.push(structuredClone(fields));Object.assign(this.rows.find(r=>r.id===id).fields,fields);}}
 function body(eventId='event_1'){return {schema:'2.0',header:{event_id:eventId,app_id:env.FEISHU_APP_ID,event_type:'card.action.trigger',token:env.FEISHU_VERIFICATION_TOKEN,create_time:String(now.getTime()*1000),tenant_key:'tenant_example'},event:{operator:{open_id:'ou_actor',tenant_key:'tenant_example'},action:{tag:'button',value:{action:'resolve_issue',issue_id:issue.id,record_id:issue.record_id}},context:{open_message_id:'om_card',open_chat_id:'oc_test'}}};}
 const request=b=>new Request('https://example.test/feishu/card-actions',{method:'POST',body:JSON.stringify(b)});
+test('非识别窗口仍即时处理已受理按钮，只读取该操作所需表格，不查询群消息或发新卡片',async()=>{
+ const {store,ledger,api,patches}=await setup();await store.set('schedule',{enabled:true,enabled_at:now.toISOString()});
+ await acceptCardAction(body('off_window_button'),env,store,now);
+ const patch=api.call;api.call=async(path,options)=>{
+   if(path.endsWith('/records')){const rows=await ledger.records(),fields=Object.values(F);return {fields,data:rows.map(r=>fields.map(f=>r.fields[f]??null)),record_id_list:rows.map(r=>r.id),has_more:false,rev:1};}
+   if(path.endsWith('/records/batch_update')){for(const[id,fields]of Object.entries(options.data.update_records))await ledger.update(id,fields);return {};}
+   return patch(path,options);
+ };
+ api.list=async()=>{throw new Error('不能查询群消息');};api.sendCard=async()=>{throw new Error('不能发送新卡片');};
+ const result=await tick({...env,DB:store.db,BASE_LEDGER_ENABLED:'true',BASE_TOKEN:'fake',BASE_TABLE_ID:'tbl_fake'},{now,api});
+ assert.equal(result.ok,true);assert.equal((await store.state('card_action:off_window_button')).state,'done');assert.equal(patches.length,1);assert.equal(await store.state('last_sync'),null);
+});
+test('经确认合并删除重复行后，旧卡片按钮仍按原授权关联更新保留记录，不能篡改重定向',async()=>{
+ const {store,ledger,api,patches}=await setup();
+ const canonical={...issue,id:'om_canonical:main',root_id:'om_canonical',record_id:'rec_canonical',title:'合并后保留的问题'};
+ ledger.rows=new Ledger([canonical]).rows;await store.putIssues([canonical]);
+ await store.set(`issue_alias:${issue.id}`,{from_record_id:issue.record_id,issue_id:canonical.id,record_id:canonical.record_id});
+ const forged=body('forged_alias');forged.event.action.value.record_id=canonical.record_id;
+ await assert.rejects(()=>acceptCardAction(forged,env,store,now),/授权卡片/);
+ await acceptCardAction(body('merged_action'),env,store,now);
+ const [result]=await processCardActions(env,store,api,{ledger,now,eventId:'merged_action'});
+ assert.equal(result.state,'done');assert.deepEqual(ledger.rows[0].fields[F.status],['已处理']);assert.equal(ledger.writes.length,1);
+ const button=buttons(patches[0]).find(b=>b.behaviors?.[0]?.value.issue_id===issue.id);
+ assert.equal(button.disabled,true);assert.equal(button.behaviors[0].value.record_id,issue.record_id);
+ assert.equal((await store.rows('issues')).find(i=>i.id===canonical.id).status,'closed');
+});
 async function setup({formal=false,issues:items=[issue]}={}){const store=new Store(database()),ledger=new Ledger(items),patches=[];await store.set('members',members);await store.putIssues(items);for(const i of items)await store.set(`ledger_map:${i.id}`,{record_id:i.record_id,manual:true});await queueSlot(env,store,{ledger:true,issues:items,members,cutoff:now},{id:'1330',scheduled_at:now.toISOString()},formal?'schedule':'test-card-actions',now);const delivery=(await store.pending())[0];await store.mark(delivery.id,'sent','om_card');const api={async members(){return members;},async call(path,options){assert.equal(options.method,'PATCH','不允许发送新群消息');assert.equal(path,'/im/v1/messages/om_card');patches.push(JSON.parse(options.data.content));return {};}};return {store,ledger,api,patches};}
 function buttons(node){if(!node||typeof node!=='object')return [];return [...(node.tag==='button'?[node]:[]),...Object.values(node).flatMap(v=>typeof v==='object'?Array.isArray(v)?v.flatMap(buttons):buttons(v):[])];}
 

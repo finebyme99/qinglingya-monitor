@@ -33,7 +33,7 @@ test('关闭异常私信覆盖运行、按钮和外部心跳告警，未发送�
 });
 
 test('关闭异常私信后真实运行失败仍抛错、记录故障并保留运行心跳和计划',async()=>{
- const{DB,store}=await fixture();let privateCalls=0;
+ const{DB,store}=await fixture();const now=new Date('2026-10-16T05:20:00Z');let privateCalls=0;
  const muted={...env,DB,TARGET_CHAT_ID:'oc_test',ALLOWED_TARGET_CHAT_ID:'oc_test',SOURCE_CHAT_ID:'oc_formal',ALERT_NOTIFICATIONS_ENABLED:'false'};
  const api={async members(){throw new Error('虚构群消息读取失败');},async call(){privateCalls++;throw new Error('不应发送私信');}};
  await assert.rejects(()=>tick(muted,{now,api}),/虚构群消息读取失败/);

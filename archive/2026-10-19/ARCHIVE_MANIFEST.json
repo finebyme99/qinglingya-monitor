@@ -2,18 +2,18 @@
   "archive_date": "2026-10-19",
   "prepared_at": "2026-10-19T02:25:02.096430+00:00",
   "github_visibility_required": "private",
-  "source_build": "20261022-d1-change-only-v17",
-  "source_worker_version": "8fab9dc6-88b0-487e-8fa1-9b4b96bff4f2",
+  "source_build": "20261022-prepush-analysis-v18",
+  "source_worker_version": "647fb1ff-f594-477a-a375-c8f29cb94d17",
   "last_known_live_verification": {
-    "deployment_id": "b387210c-834c-4ae7-b07e-554c824efbe2",
-    "health_build": "20261022-d1-change-only-v17",
-    "conclusion": "deployed_ready_100_percent; worker_and_durable_object_v17; natural_minute_tick_and_ledger_sync_verified",
-    "monitor_run": "https://github.com/finebyme99/qinglingya-monitor/actions/runs/39708200226",
+    "deployment_id": "7f4fd9e5-c4a3-49a4-8609-c901241d3470",
+    "health_build": "20261022-prepush-analysis-v18",
+    "durable_object_build": "20261022-prepush-analysis-v18",
+    "conclusion": "ready_100_percent; natural_minute_heartbeat_advanced_without_business_sync; approved_merge_and_live_preview_verified; callback_probe_and_external_monitor_passed",
+    "monitor_run": "https://github.com/finebyme99/qinglingya-monitor/actions/runs/39713706662",
     "monitor_run_conclusion": "success",
     "fault_count": 0,
-    "callback_probe_elapsed_ms": 216,
-    "durable_object_build": "20261022-d1-change-only-v17",
-    "last_verified_at": "2026-10-22T01:54:46.964078+00:00"
+    "callback_probe_elapsed_ms": 352,
+    "last_verified_at": "2026-10-22T02:54:33.861036+00:00"
   },
   "user_confirmation": {
     "date": "2026-10-19",
@@ -46,17 +46,17 @@
     {
       "file": "src/analysis.mjs",
       "source": "outputs/cuicuiya/src/analysis.mjs",
-      "sha256": "af41a9d10ee22c8ca254cc31cc365f44d354d5bcdc54a4424a4777b1a7fd3244"
+      "sha256": "5c21c8367a4ba5721fb33b7e6c146beb4bb6b85bc14e96b5f5efa75d294aabfd"
     },
     {
       "file": "src/api.mjs",
       "source": "outputs/cuicuiya/src/api.mjs",
-      "sha256": "dce0786524bd8e0cb81f3a0dd93794ffc579675e7b5a9eebc5a2549485a55544"
+      "sha256": "7d2129adf07b84c6a3ee1830eca708e6e9ff676c5e59f9c55c3d688dc2819131"
     },
     {
       "file": "src/card-actions.mjs",
       "source": "outputs/cuicuiya/src/card-actions.mjs",
-      "sha256": "0c8a298c9a0e1d2409e51ab3ef0d7d12152aa21e2687bfa8ed8c72e8d0236275"
+      "sha256": "45bb903426cb1b2d007b5bc18e0adc7995ca67d63958d8960ef0e072ba230e53"
     },
     {
       "file": "src/card.mjs",
@@ -66,7 +66,7 @@
     {
       "file": "src/core.mjs",
       "source": "outputs/cuicuiya/src/core.mjs",
-      "sha256": "78a83e40833b2db6b4f40304ee273710ef3b38ca24206432225bdb1c7fd93385"
+      "sha256": "fa3f45772f285eb4878824cee40a2d32cc0d8e1a9323d293a85db18f23bca491"
     },
     {
       "file": "src/ledger.mjs",
@@ -91,7 +91,7 @@
     {
       "file": "src/worker.mjs",
       "source": "outputs/cuicuiya/src/worker.mjs",
-      "sha256": "19970aa190930afd05c7491672f3c1d0f7fb3246a4fc6916d1a7b1d281a976f2"
+      "sha256": "155349dd8acc67f9549a2c14f00216741c694e6e8f6f78dd985747abb1c6f30d"
     },
     {
       "file": "test/bot.test.mjs",
@@ -101,7 +101,7 @@
     {
       "file": "test/card-actions.test.mjs",
       "source": "outputs/cuicuiya/test/card-actions.test.mjs",
-      "sha256": "67d81ee4eb656db600c21f9d254cd3ff569fd6dfd83b6d9ab81b42d0d8f13f76"
+      "sha256": "2cca18650620478b606206af2e15098c9225e41827371206fcbf15865c4fed9b"
     },
     {
       "file": "test/ledger.test.mjs",
@@ -116,7 +116,7 @@
     {
       "file": "test/monitor.test.mjs",
       "source": "outputs/cuicuiya/test/monitor.test.mjs",
-      "sha256": "4b0f45200f0171b187296e73b489d80e669143c99da4b748b1227ff038caf057"
+      "sha256": "0a26a58abd89dbc1dfe76b524b8ec3c6b629abe51285425eb1e8d021c21206db"
     },
     {
       "file": "callback-bridge/wrangler.jsonc",
@@ -151,7 +151,17 @@
     {
       "file": "test/store.test.mjs",
       "source": "outputs/cuicuiya/test/store.test.mjs",
-      "sha256": "39c45871881b02775568f03cced27036adb4b1abed265c358ea93171307296a8"
+      "sha256": "c94b9616b23dbadb1c9ee191fdc2ed2fa4f27d13ef17f065395d29f9335fa589"
+    },
+    {
+      "file": "test/prepush.test.mjs",
+      "source": "outputs/cuicuiya/test/prepush.test.mjs",
+      "sha256": "daf9340c0f02e5888f94c4f32a6a637bc90762cc610fa73d080fb6e4885dfbc1"
+    },
+    {
+      "file": "test/image-context.test.mjs",
+      "source": "outputs/cuicuiya/test/image-context.test.mjs",
+      "sha256": "f3471d2025fe8f3dac91057bf02fa5d403680f4fdf5b6a17b1f53dac27ca7f12"
     }
   ],
   "excluded": [
@@ -176,9 +186,9 @@
   },
   "archive_tests": {
     "node": "v22.23.2",
-    "bot_passed": 96,
+    "bot_passed": 113,
     "monitor_passed": 10,
-    "total_passed": 106,
+    "total_passed": 123,
     "failed": 0,
     "skipped": 0,
     "syntax_check": "passed",
@@ -189,27 +199,61 @@
     "real_messages_sent": 0,
     "live_deployment_for_archive": false,
     "new_native_feishu_test_messages_sent": 0,
-    "rendering_verification": "No UI changes; live read-only card preview succeeded; no native test messages",
-    "existing_layout_lint_warning": "Not rerun for storage-only change; existing layout unchanged",
+    "rendering_verification": "No layout changes; live read-only preview and authenticated MiMo image request verified; no real native test messages",
+    "existing_layout_lint_warning": "Layout unchanged; callback alias behavior covered by isolated regression; no new native test message",
     "feature_deployment_in_this_update": true
   },
   "github_repository": "finebyme99/qinglingya-monitor",
   "repository_directory": "archive/2026-10-19",
-  "publication_scope": "Source snapshot of separately deployed v17 D1 change-only writes; existing root monitor workflow and business rules remain active; archive commit does not deploy",
-  "monitor_root_baseline_commit": "4dfee8ac8edd91667265efd4dc0d2b45f6a2ed1b",
-  "updated_at": "2026-10-22T01:53:48.880087+00:00",
-  "previous_source_build": "20261019-card-capacity-v16",
-  "previous_source_worker_version": "50bfc8ed-dbf4-479e-9479-1d1155bbc118",
+  "publication_scope": "Source snapshot of deployed v18 preparation-before-push, image context and approved duplicate alias support; existing root monitor remains unchanged; archive commit does not deploy",
+  "monitor_root_baseline_commit": "f00ccbc30fcb50a58b00390335da2310c786232d",
+  "updated_at": "2026-10-22T02:53:31.996111+00:00",
+  "previous_source_build": "20261022-d1-change-only-v17",
+  "previous_source_worker_version": "8fab9dc6-88b0-487e-8fa1-9b4b96bff4f2",
   "write_regression": {
     "measurement": "actual local SQLite changed rows, not Cloudflare billing",
     "minute_checks": 60,
     "synthetic_issues": 30,
-    "before_mapping_row_changes": 1800,
-    "after_mapping_row_changes": 0,
-    "before_total_row_changes": 2196,
-    "after_total_row_changes": 312,
-    "ledger_reads": 180,
-    "command_list_calls": 132,
+    "total_row_changes": 180,
+    "mapping_row_changes": 0,
+    "business_table_reads": 0,
+    "chat_list_calls": 0,
     "sends": 0
-  }
+  },
+  "preparation_schedule": {
+    "timezone": "Asia/Shanghai",
+    "weekdays_only": true,
+    "prepare": [
+      "09:20",
+      "13:20",
+      "15:50"
+    ],
+    "push": [
+      "09:30",
+      "13:30",
+      "16:00"
+    ],
+    "ordinary_minute_business_reads": 0,
+    "buttons": "immediate; existing callbacks and retries preserved",
+    "on_preparation_failure": "keep checkpoints; catch up before delivery, may delay; never send stale AI state"
+  },
+  "image_verification": {
+    "provider": "existing MiMo mimo-v2.6-flash",
+    "method": "authenticated Feishu image download and Base64 content in same context request",
+    "read_only_live_images": 4,
+    "resulting_issue_count": 1,
+    "raw_images_archived": false,
+    "pixel_data_persisted_in_D1": false
+  },
+  "approved_duplicate_merge": {
+    "human_authorisation": "explicit approval in current chat",
+    "preserved_records": 1,
+    "deleted_duplicate_records": 2,
+    "evidence_and_owners_preserved": true,
+    "progress_preserved": true,
+    "old_card_aliases": 2,
+    "backups": "private local work evidence only; not archived",
+    "test_business_messages_sent": 0
+  },
+  "credential_handling": "Existing authenticated clients only; no values displayed or archived"
 }

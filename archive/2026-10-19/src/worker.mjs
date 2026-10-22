@@ -2,13 +2,13 @@ import { SLOTS, STATUS, ANALYSIS_PROMPT, assertTarget, assertDeliveryTarget, del
 import { buildCards, buildCardPages } from './card.mjs';
 import { Store } from './store.mjs';
 import { Feishu } from './api.mjs';
-import { analyzeIssues } from './analysis.mjs';
+import { analyzeIssues, analysisImages } from './analysis.mjs';
 import { previousPeriodStart, scopeIssues, isResolutionCommand, resolveCommand, hasResolutionText } from './tracking.mjs';
 import { BaseLedger, ledgerEnabled, syncLedger, tableIssues } from './ledger.mjs';
 import { cardActionsEnabled, decodeCardCallback, acceptCardAction, processCardActions, actionResponse } from './card-actions.mjs';
 import { notifyOwner, notifyCardFailures, checkExternalMonitor } from './alerts.mjs';
 import { monitorAuthorized, monitorStatus } from './monitor.mjs';
-const BUILD='20261022-d1-change-only-v17';
+const BUILD='20261022-prepush-analysis-v18';
 const COMMAND_RULES='20261016-any-member-and-transfer-v2';
 const TABLE_SCOPE='按数据表最新进展统计，仅列未解决事项';
 async function tableData(env,store,api=new Feishu(env)) {
@@ -91,7 +91,7 @@ async function sync(env, store, api, now,ledgerRows=null) {
   const merged=new Map(known.map(m=>[m.id,m]));
   for(const [id,m] of incoming) merged.set(id,m);
   const all=[...merged.values()].sort((a,b)=>a.created_at.localeCompare(b.created_at)||a.id.localeCompare(b.id));
-  const signature=await hash(JSON.stringify(all.map(m=>[m.id,m.updated_at,m.deleted,m.text,m.parent_id,m.mentions])));
+  const signature=await hash(JSON.stringify(all.map(m=>[m.id,m.updated_at,m.deleted,m.text,m.parent_id,m.mentions,m.image_refs||[]])));
   const analyzed=await store.state('analyzed_signature');
   await store.putMessages([...incoming.values()],hash);
   if(signature!==analyzed) {
@@ -114,9 +114,11 @@ async function sync(env, store, api, now,ledgerRows=null) {
       const context=all.filter(m=>m.sender_type==='user'&&contextIds.has(m.id));
       await store.set('analysis_progress',{phase:'analyzing',batch:Math.floor(offset/50)+1,total_batches:Math.ceil(human.length/50),messages:human.length,time:new Date().toISOString()});
       const input=analysisInput(now,current,context,batch);
+      input.image_inputs=await analysisImages(api,context,batch,current);
       if(ledgerRows)input.ledger_records=authoritative.map(({id,title,status,note,manual,source_url})=>({id,title,status,note,manual,source_url}));
       const result=await analyzeIssues(env,input,ANALYSIS_PROMPT+'\n本次是增量批次，只分析focus_message_ids中的新增消息及其对已有事项的影响。其他messages是理解引用关系的背景，不要把背景里的每个问题重新输出。',{messages:all,previous:current,members,onInvalid:async diagnostic=>{await store.set('analysis_validation_failure',diagnostic);if(diagnostic.kind==='model_output')await store.event('ai_output_invalid',diagnostic);}});
-      const changes=result.changes;
+      const changes=[];
+      for(const change of result.changes)if(!await store.state(`issue_alias:${change.id}`))changes.push(change);
       for(const i of changes) if(!i.source_url) throw new Error('原消息缺少可用跳转链接，停止发送以免误导');
       await store.putIssues(changes);
       await store.markAnalyzed(batch.map(m=>m.id));
@@ -188,25 +190,34 @@ export async function tick(env,{now=new Date(),force=false,sendTest=null,mainten
     const enabled=schedule?.enabled===true;
     if(!enabled&&!force&&!sendTest) return {paused:true};
     if(!await store.state('tracking_policy'))await store.set('tracking_policy',{start_day:previousPeriodStart(now),started_at:now.toISOString()});
-    const ledger=ledgerEnabled(env)?new BaseLedger(api,env):null;
-    const ledgerRows=ledger?await ledger.records():null;
-    await processCommands(env,store,api,now);
     const weekend=!force&&!sendTest&&!isWeekday(now);
-    const due=enabled&&!sendTest&&!maintenance?dueSlots(now,schedule.enabled_at):[];
-    const unsent=[];
-    for(const s of due) if(!await store.state(`queued:schedule:${s.scheduled_at.slice(0,10)}:${s.id}`)) unsent.push(s);
-    const last=await store.state('last_sync');
-    const hour=Number(localTime(now).slice(11,13));
-    const interval=(hour>=8&&hour<20?5:30)*60000;
+    const automatic=enabled&&!sendTest&&!maintenance&&!weekend;
+    const due=automatic?dueSlots(now,schedule.enabled_at):[];
+    const preparationDue=automatic?dueSlots(new Date(now.getTime()+10*60000),schedule.enabled_at):[];
+    const unsent=[],toPrepare=[];
+    for(const slot of due)if(!await store.state(`queued:schedule:${slot.scheduled_at.slice(0,10)}:${slot.id}`))unsent.push(slot);
+    for(const slot of preparationDue){
+      const key=`schedule:${slot.scheduled_at.slice(0,10)}:${slot.id}`;
+      if(!await store.state(`queued:${key}`)&&!await store.state(`prepared:${key}`))toPrepare.push(slot);
+    }
     let data;
-    if(!weekend&&(force||sendTest||unsent.length||!last||now.getTime()-Date.parse(last)>=interval))data=await sync(env,store,api,now,ledgerRows);
-    if(ledger) {
-      const policy=await store.state('tracking_policy'),cached=await store.rows('issues');
-      const active=cached.filter(i=>localTime(new Date(i.created_at)).slice(0,10)>=policy.start_day);
-      const result=await syncLedger({ledger,store,issues:active,members:await store.state('members')||{},messages:await store.rows('messages'),now});
-      data={issues:tableIssues(result.rows,{issues:cached,members:await store.state('members')||{},tableUrl:env.BASE_TABLE_URL}),members:await store.state('members')||{},cutoff:new Date(),ledger:true};
+    // One preparation per slot; a missed/failed wake-up catches up before delivery, never from stale AI state.
+    if(force||sendTest||toPrepare.length){
+      const ledger=ledgerEnabled(env)?new BaseLedger(api,env):null;
+      const ledgerRows=ledger?await ledger.records():null;
+      await processCommands(env,store,api,now);
+      data=await sync(env,store,api,now,ledgerRows);
+      if(ledger){
+        const policy=await store.state('tracking_policy'),cached=await store.rows('issues');
+        const active=cached.filter(i=>localTime(new Date(i.created_at)).slice(0,10)>=policy.start_day);
+        const result=await syncLedger({ledger,store,issues:active,members:await store.state('members')||{},messages:await store.rows('messages'),now});
+        data={issues:tableIssues(result.rows,{issues:cached,members:await store.state('members')||{},tableUrl:env.BASE_TABLE_URL}),members:await store.state('members')||{},cutoff:now,ledger:true};
+      }
+      for(const slot of toPrepare)await store.set(`prepared:schedule:${slot.scheduled_at.slice(0,10)}:${slot.id}`,{time:now.toISOString(),message_cutoff:await store.state('last_sync')});
     }
     if(weekend)return {weekend:true};
+    // Manual table edits after preparation take precedence; delivery itself does not query chats or run AI.
+    if(unsent.length)data=ledgerEnabled(env)?await tableData(env,store,api):{issues:await store.rows('issues'),members:await store.state('members')||{},cutoff:new Date(await store.state('last_sync'))};
     if(sendTest) await queueSlot(env,store,data,{id:sendTest.slot,scheduled_at:now.toISOString()},`test-${sendTest.request_id}`,now);
     for(const slot of unsent) await queueSlot(env,store,data,slot,'schedule',now);
     const receipts=await sendQueued(store,api,env,now,{testOnly:!!sendTest||maintenance});

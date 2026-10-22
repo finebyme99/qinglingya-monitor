@@ -95,7 +95,7 @@ test('台账未变化不反复写关联，下一分钟的人工进展仍被发�
   assert.doesNotMatch(JSON.stringify(buildCards(effective,{})),/部门筛选无法搜索/);
 });
 
-test('60轮每分钟检查30个未变问题：不重复写关联，检查和心跳继续运行且无额外消息',async t=>{
+test('60轮普通分钟只运行轻量心跳，未变问题不写关联或读取业务数据',async t=>{
   const d=database(t),store=new Store(d.db),ledger=new Ledger(),start=Date.parse('2026-10-22T02:00:00Z');
   const issues=Array.from({length:30},(_,n)=>({...issue,id:`om_${n}:main`,root_id:`om_${n}`,title:`隔离测试问题${n}`,evidence_ids:[`om_${n}`],source_url:`https://example.test/source/${n}`}));
   await store.set('schedule',{enabled:true,enabled_at:new Date(start).toISOString()});
@@ -117,9 +117,9 @@ test('60轮每分钟检查30个未变问题：不重复写关联，检查和心�
   for(let minute=2;minute<62;minute++)assert.equal((await tick(env,{now:new Date(start+minute*60000),api})).ok,true);
   const mappingWrites=d.mutations.filter(m=>m.args[0]?.startsWith?.('ledger_map:')).reduce((n,m)=>n+m.changes,0);
   t.diagnostic(JSON.stringify({minute_checks:60,issues:30,mapping_row_changes:mappingWrites,total_row_changes:d.changes(),ledger_reads:ledger.reads-initialReads,command_list_calls:lists,ledger_writes:ledger.writes.length,sends}));
-  assert.equal(mappingWrites,0);assert.equal(ledger.writes.length,0);assert.ok(ledger.reads-initialReads>=120);
-  assert.ok(lists>=120);assert.equal(sends,0);
+  assert.equal(mappingWrites,0);assert.equal(ledger.writes.length,0);assert.equal(ledger.reads-initialReads,0);
+  assert.equal(lists,0);assert.equal(sends,0);
   assert.equal(await store.state('last_tick'),new Date(start+61*60000).toISOString());
-  assert.equal(await store.state('last_command_poll'),new Date(start+61*60000).toISOString());
+  assert.equal(await store.state('last_command_poll'),null);
   assert.deepEqual(await store.state('schedule'),{enabled:true,enabled_at:new Date(start).toISOString()});
 });
