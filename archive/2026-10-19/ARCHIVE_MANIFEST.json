@@ -2,18 +2,18 @@
   "archive_date": "2026-10-19",
   "prepared_at": "2026-10-19T02:25:02.096430+00:00",
   "github_visibility_required": "private",
-  "source_build": "20261019-card-capacity-v16",
-  "source_worker_version": "50bfc8ed-dbf4-479e-9479-1d1155bbc118",
+  "source_build": "20261022-d1-change-only-v17",
+  "source_worker_version": "8fab9dc6-88b0-487e-8fa1-9b4b96bff4f2",
   "last_known_live_verification": {
-    "deployment_id": "b514b2f7-c769-48fc-97d8-0e1470bf7c35",
-    "health_build": "20261019-card-capacity-v16",
-    "conclusion": "deployed_ready_live_preview_and_independent_monitor_verified",
-    "previous_monitor_run": "https://github.com/finebyme99/qinglingya-monitor/actions/runs/39186908251",
-    "previous_monitor_run_build": "20261019-external-card-members-v15",
-    "monitor_run": "https://github.com/finebyme99/qinglingya-monitor/actions/runs/39213164263",
+    "deployment_id": "b387210c-834c-4ae7-b07e-554c824efbe2",
+    "health_build": "20261022-d1-change-only-v17",
+    "conclusion": "deployed_ready_100_percent; worker_and_durable_object_v17; natural_minute_tick_and_ledger_sync_verified",
+    "monitor_run": "https://github.com/finebyme99/qinglingya-monitor/actions/runs/39708200226",
     "monitor_run_conclusion": "success",
     "fault_count": 0,
-    "callback_probe_elapsed_ms": 342
+    "callback_probe_elapsed_ms": 216,
+    "durable_object_build": "20261022-d1-change-only-v17",
+    "last_verified_at": "2026-10-22T01:54:46.964078+00:00"
   },
   "user_confirmation": {
     "date": "2026-10-19",
@@ -81,7 +81,7 @@
     {
       "file": "src/store.mjs",
       "source": "outputs/cuicuiya/src/store.mjs",
-      "sha256": "69c48c0157172c9a8a64014432f4faf52a3c619a707b1212b71166f661fcc093"
+      "sha256": "2a865fa6ca8fd1d4881b8cfbfcf13a1162847734c12e06a9be1f8bae8ac2d17e"
     },
     {
       "file": "src/tracking.mjs",
@@ -91,7 +91,7 @@
     {
       "file": "src/worker.mjs",
       "source": "outputs/cuicuiya/src/worker.mjs",
-      "sha256": "04ee93022e06bb17c9efcb2e8a1c62577077eeaae7a36fe94f8acc9c9be64e8e"
+      "sha256": "19970aa190930afd05c7491672f3c1d0f7fb3246a4fc6916d1a7b1d281a976f2"
     },
     {
       "file": "test/bot.test.mjs",
@@ -147,6 +147,11 @@
       "file": "external-monitor/README.md",
       "source": "outputs/cuicuiya/external-monitor/README.md",
       "sha256": "a9989ee55aa8f7cc02b1a022b1ec3d4618ec80db8ca64bdeea01a43ff4afb917"
+    },
+    {
+      "file": "test/store.test.mjs",
+      "source": "outputs/cuicuiya/test/store.test.mjs",
+      "sha256": "39c45871881b02775568f03cced27036adb4b1abed265c358ea93171307296a8"
     }
   ],
   "excluded": [
@@ -171,9 +176,9 @@
   },
   "archive_tests": {
     "node": "v22.23.2",
-    "bot_passed": 89,
+    "bot_passed": 96,
     "monitor_passed": 10,
-    "total_passed": 99,
+    "total_passed": 106,
     "failed": 0,
     "skipped": 0,
     "syntax_check": "passed",
@@ -184,15 +189,27 @@
     "real_messages_sent": 0,
     "live_deployment_for_archive": false,
     "new_native_feishu_test_messages_sent": 0,
-    "rendering_verification": "Local HTML approximation and live read-only preview; screenshot capture timed out; no new native visual acceptance",
-    "existing_layout_lint_warning": "container-depth unchanged from previous release",
+    "rendering_verification": "No UI changes; live read-only card preview succeeded; no native test messages",
+    "existing_layout_lint_warning": "Not rerun for storage-only change; existing layout unchanged",
     "feature_deployment_in_this_update": true
   },
   "github_repository": "finebyme99/qinglingya-monitor",
   "repository_directory": "archive/2026-10-19",
-  "publication_scope": "Source snapshot of separately deployed v16; the existing root monitor remains unchanged and this archive commit has no deployment workflow",
-  "monitor_root_baseline_commit": "4c20cb96bafd19571ad322d3b0d45828108cae04",
-  "updated_at": "2026-10-19T07:01:25.591020+00:00",
-  "previous_source_build": "20261019-external-card-members-v15",
-  "previous_source_worker_version": "b33d90c3-a1af-4a8f-9ef5-6df1a8d6cdb2"
+  "publication_scope": "Source snapshot of separately deployed v17 D1 change-only writes; existing root monitor workflow and business rules remain active; archive commit does not deploy",
+  "monitor_root_baseline_commit": "4dfee8ac8edd91667265efd4dc0d2b45f6a2ed1b",
+  "updated_at": "2026-10-22T01:53:48.880087+00:00",
+  "previous_source_build": "20261019-card-capacity-v16",
+  "previous_source_worker_version": "50bfc8ed-dbf4-479e-9479-1d1155bbc118",
+  "write_regression": {
+    "measurement": "actual local SQLite changed rows, not Cloudflare billing",
+    "minute_checks": 60,
+    "synthetic_issues": 30,
+    "before_mapping_row_changes": 1800,
+    "after_mapping_row_changes": 0,
+    "before_total_row_changes": 2196,
+    "after_total_row_changes": 312,
+    "ledger_reads": 180,
+    "command_list_calls": 132,
+    "sends": 0
+  }
 }

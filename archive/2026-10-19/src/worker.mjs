@@ -8,7 +8,7 @@ import { BaseLedger, ledgerEnabled, syncLedger, tableIssues } from './ledger.mjs
 import { cardActionsEnabled, decodeCardCallback, acceptCardAction, processCardActions, actionResponse } from './card-actions.mjs';
 import { notifyOwner, notifyCardFailures, checkExternalMonitor } from './alerts.mjs';
 import { monitorAuthorized, monitorStatus } from './monitor.mjs';
-const BUILD='20261019-card-capacity-v16';
+const BUILD='20261022-d1-change-only-v17';
 const COMMAND_RULES='20261016-any-member-and-transfer-v2';
 const TABLE_SCOPE='按数据表最新进展统计，仅列未解决事项';
 async function tableData(env,store,api=new Feishu(env)) {

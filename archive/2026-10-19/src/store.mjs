@@ -1,17 +1,18 @@
 export class Store {
   constructor(db) { this.db=db; }
   async state(key) { const row=await this.db.prepare('SELECT value FROM state WHERE key=?').bind(key).first(); return row?JSON.parse(row.value):null; }
-  async set(key,value) { await this.db.prepare('INSERT INTO state(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value').bind(key,JSON.stringify(value)).run(); }
+  // Compare atomically in D1 so unchanged data costs no row writes, including across instances.
+  async set(key,value) { await this.db.prepare('INSERT INTO state(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value WHERE state.value IS NOT excluded.value').bind(key,JSON.stringify(value)).run(); }
   async rows(table) { if(!['messages','issues'].includes(table)) throw new Error('非法表名'); return (await this.db.prepare(`SELECT payload FROM ${table}`).all()).results.map(r=>JSON.parse(r.payload)); }
   async putMessages(messages, hash) {
     for(let offset=0;offset<messages.length;offset+=40) {
-      const batch=await Promise.all(messages.slice(offset,offset+40).map(async m=>this.db.prepare('INSERT INTO messages(id,chat_id,created_at,updated_at,payload,hash) VALUES(?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET updated_at=excluded.updated_at,payload=excluded.payload,hash=excluded.hash').bind(m.id,m.chat_id,m.created_at,m.updated_at,JSON.stringify(m),await hash(JSON.stringify(m)))));
+      const batch=await Promise.all(messages.slice(offset,offset+40).map(async m=>this.db.prepare('INSERT INTO messages(id,chat_id,created_at,updated_at,payload,hash) VALUES(?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET updated_at=excluded.updated_at,payload=excluded.payload,hash=excluded.hash WHERE messages.updated_at IS NOT excluded.updated_at OR messages.payload IS NOT excluded.payload OR messages.hash IS NOT excluded.hash').bind(m.id,m.chat_id,m.created_at,m.updated_at,JSON.stringify(m),await hash(JSON.stringify(m)))));
       if(batch.length) await this.db.batch(batch);
     }
   }
   async putIssues(issues) {
     for(let offset=0;offset<issues.length;offset+=40) {
-      const batch=issues.slice(offset,offset+40).map(i=>this.db.prepare('INSERT INTO issues(id,root_id,status,created_at,updated_at,payload) VALUES(?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET status=excluded.status,updated_at=excluded.updated_at,payload=excluded.payload').bind(i.id,i.root_id,i.status,i.created_at,i.updated_at,JSON.stringify(i)));
+      const batch=issues.slice(offset,offset+40).map(i=>this.db.prepare('INSERT INTO issues(id,root_id,status,created_at,updated_at,payload) VALUES(?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET status=excluded.status,updated_at=excluded.updated_at,payload=excluded.payload WHERE issues.status IS NOT excluded.status OR issues.updated_at IS NOT excluded.updated_at OR issues.payload IS NOT excluded.payload').bind(i.id,i.root_id,i.status,i.created_at,i.updated_at,JSON.stringify(i)));
       if(batch.length) await this.db.batch(batch);
     }
   }
@@ -19,7 +20,7 @@ export class Store {
   async markAnalyzed(ids) {
     for(let i=0;i<ids.length;i+=50) {
       const slice=ids.slice(i,i+50);if(!slice.length) continue;
-      await this.db.prepare(`UPDATE messages SET analyzed_hash=hash WHERE id IN (${slice.map(()=>'?').join(',')})`).bind(...slice).run();
+      await this.db.prepare(`UPDATE messages SET analyzed_hash=hash WHERE id IN (${slice.map(()=>'?').join(',')}) AND analyzed_hash IS NOT hash`).bind(...slice).run();
     }
   }
   async lock(now) {
